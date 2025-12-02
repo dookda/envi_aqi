@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const BASE_URL = 'http://air4thai.com/forweb/getHistoryData.php';
+const BACKEND_URL = 'http://localhost:8000';
 
 /**
  * Fetch historical air quality data from Air4Thai API
@@ -28,6 +29,31 @@ export const fetchAirQualityData = async ({ stationID, param, startDate, endDate
     return response.data;
   } catch (error) {
     console.error('Error fetching air quality data:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetch air quality data with AI gap filling using LSTM model
+ * @param {Object} params - Query parameters
+ * @param {string} params.stationID - Station ID
+ * @param {string} params.param - Parameter (e.g., 'PM25', 'PM10', 'O3', 'CO', 'NO2', 'SO2')
+ * @param {string} params.startDate - Start date (format: YYYY-MM-DD)
+ * @param {string} params.endDate - End date (format: YYYY-MM-DD)
+ * @returns {Promise<Object>} Air quality data with gaps filled
+ */
+export const fetchAirQualityDataWithGapFilling = async ({ stationID, param, startDate, endDate }) => {
+  try {
+    const response = await axios.post(`${BACKEND_URL}/api/air-quality-with-gaps-filled`, {
+      stationID,
+      param,
+      startDate,
+      endDate
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching air quality data with gap filling:', error);
     throw error;
   }
 };
@@ -72,34 +98,6 @@ export const getParameters = () => {
 export const getBasemaps = () => {
   return [
     {
-      id: 'demo',
-      name: 'Streets (Light)',
-      url: 'https://demotiles.maplibre.org/style.json'
-    },
-    {
-      id: 'osm-carto',
-      name: 'OpenStreetMap',
-      url: {
-        version: 8,
-        sources: {
-          osm: {
-            type: 'raster',
-            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            attribution: '© OpenStreetMap contributors',
-            maxzoom: 19
-          }
-        },
-        layers: [
-          {
-            id: 'osm',
-            type: 'raster',
-            source: 'osm'
-          }
-        ]
-      }
-    },
-    {
       id: 'carto-light',
       name: 'Carto Light',
       url: {
@@ -122,58 +120,6 @@ export const getBasemaps = () => {
             id: 'carto',
             type: 'raster',
             source: 'carto'
-          }
-        ]
-      }
-    },
-    {
-      id: 'carto-dark',
-      name: 'Carto Dark',
-      url: {
-        version: 8,
-        sources: {
-          carto: {
-            type: 'raster',
-            tiles: [
-              'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-              'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-              'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
-            ],
-            tileSize: 256,
-            attribution: '© OpenStreetMap contributors, © CARTO',
-            maxzoom: 19
-          }
-        },
-        layers: [
-          {
-            id: 'carto',
-            type: 'raster',
-            source: 'carto'
-          }
-        ]
-      }
-    },
-    {
-      id: 'satellite',
-      name: 'Satellite',
-      url: {
-        version: 8,
-        sources: {
-          satellite: {
-            type: 'raster',
-            tiles: [
-              'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
-            ],
-            tileSize: 256,
-            attribution: 'Tiles © Esri',
-            maxzoom: 19
-          }
-        },
-        layers: [
-          {
-            id: 'satellite',
-            type: 'raster',
-            source: 'satellite'
           }
         ]
       }

@@ -77,7 +77,7 @@ class LSTMGapFiller:
         df = self.add_temporal_features(df)
         
         # Fill gaps temporarily for sequence creation
-        df['PM25_filled_temp'] = df['PM25'].fillna(method='ffill').fillna(method='bfill')
+        df['PM25_filled_temp'] = df['PM25'].ffill().bfill()
         df['has_gap'] = df['PM25'].isna()
         
         # Feature columns
@@ -252,7 +252,19 @@ def fill_air_quality_gaps(data, value_column='value', sequence_length=24):
     
     if n_gaps == 0:
         print("No gaps found. Returning original data.")
-        result = df.reset_index().to_dict('records')
+        df_reset = df.reset_index()
+        df_reset['DATETIMEDATA'] = df_reset.index if 'DATETIMEDATA' not in df_reset.columns else df_reset['DATETIMEDATA']
+
+        # Replace NaN and Inf values with None to ensure JSON compliance
+        df_reset = df_reset.replace([np.inf, -np.inf], np.nan)
+        result = df_reset.to_dict('records')
+
+        # Convert NaN to None for JSON serialization
+        for record in result:
+            for key, value in record.items():
+                if isinstance(value, (float, np.floating)) and (np.isnan(value) or np.isinf(value)):
+                    record[key] = None
+
         return result
     
     # Fill gaps using LSTM
@@ -262,9 +274,18 @@ def fill_air_quality_gaps(data, value_column='value', sequence_length=24):
     # Convert back to list of dicts
     result_df = result_df.reset_index()
     result_df['DATETIMEDATA'] = result_df['DATETIMEDATA'].dt.strftime('%Y-%m-%d %H:%M:%S')
-    
+
+    # Replace NaN and Inf values with None to ensure JSON compliance
+    result_df = result_df.replace([np.inf, -np.inf], np.nan)
+
     result = result_df.to_dict('records')
-    
+
+    # Convert NaN to None for JSON serialization
+    for record in result:
+        for key, value in record.items():
+            if isinstance(value, (float, np.floating)) and (np.isnan(value) or np.isinf(value)):
+                record[key] = None
+
     print(f"Gap filling complete. Filled {n_gaps} gaps.")
-    
+
     return result

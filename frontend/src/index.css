@@ -4,3 +4,12 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
+
+/* Ensure map markers are always on top */
+.maplibregl-marker {
+  z-index: 1000 !important;
+}
+
+.maplibregl-popup {
+  z-index: 1002 !important;
+}
