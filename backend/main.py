@@ -1,9 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import httpx
 from datetime import datetime
+from lstm_gap_filler import fill_air_quality_gaps, TENSORFLOW_AVAILABLE
 
 app = FastAPI(title="Air4Thai API Backend", version="1.0.0")
 
@@ -34,6 +35,11 @@ class Parameter(BaseModel):
     name: str
     unit: str
     color: str
+
+class GapFillRequest(BaseModel):
+    data: List[Dict[str, Any]]
+    value_column: str = "PM25"
+    sequence_length: int = 24
 
 # Air4Thai API endpoint
 AIR4THAI_BASE_URL = "http://air4thai.com/forweb/getHistoryData.php"
@@ -98,9 +104,115 @@ async def get_parameters():
         {"id": "SO2", "name": "Sulfur Dioxide (SO2)", "unit": "ppb", "color": "#eb4d4b"}
     ]
 
+@app.post("/api/fill-gaps")
+async def fill_gaps(request: GapFillRequest):
+    """
+    Fill gaps in air quality data using LSTM model (Example 1: Random 25% pattern)
+
+    This endpoint uses the LSTM model from Complete_AirQuality_DeepLearning.ipynb
+    to fill missing values in time series data.
+
+    Request body:
+    - data: List of data points with DATETIMEDATA and value fields
+    - value_column: Column name containing values (default: PM25)
+    - sequence_length: LSTM sequence length (default: 24 hours)
+
+    Returns:
+    - Filled data with additional fields:
+      - filled_value: Original or predicted value
+      - predicted_value: LSTM prediction
+      - was_gap: Boolean indicating if value was filled
+      - gap_filled: Same as was_gap
+    """
+    if not TENSORFLOW_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="TensorFlow not available. Install dependencies: pip install tensorflow scikit-learn pandas numpy"
+        )
+
+    try:
+        # Fill gaps using LSTM
+        filled_data = fill_air_quality_gaps(
+            request.data,
+            value_column=request.value_column,
+            sequence_length=request.sequence_length
+        )
+
+        return {
+            "success": True,
+            "data": filled_data,
+            "message": f"Gap filling complete using LSTM (Example 1 model)",
+            "tensorflow_available": TENSORFLOW_AVAILABLE
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error filling gaps: {str(e)}")
+
+@app.post("/api/air-quality-with-gaps-filled")
+async def get_air_quality_with_gaps_filled(request: AirQualityRequest):
+    """
+    Fetch air quality data and automatically fill any gaps using LSTM
+
+    This is a convenience endpoint that combines data fetching and gap filling.
+    """
+    if not TENSORFLOW_AVAILABLE:
+        raise HTTPException(
+            status_code=503,
+            detail="TensorFlow not available. Gap filling disabled."
+        )
+
+    try:
+        # Fetch data from Air4Thai
+        params = {
+            "stationID": request.stationID,
+            "param": request.param,
+            "type": "hr",
+            "sdate": request.startDate,
+            "edate": request.endDate,
+            "stime": "00",
+            "etime": "23"
+        }
+
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(AIR4THAI_BASE_URL, params=params)
+            response.raise_for_status()
+            api_response = response.json()
+
+        # Extract data
+        if api_response.get('result') == 'OK' and 'stations' in api_response:
+            station_data = api_response['stations'][0]['data']
+
+            # Fill gaps
+            filled_data = fill_air_quality_gaps(
+                station_data,
+                value_column=request.param,
+                sequence_length=24
+            )
+
+            return {
+                "result": "OK",
+                "stations": [{
+                    "data": filled_data
+                }],
+                "gaps_filled": True,
+                "original_response": api_response
+            }
+        else:
+            return api_response
+
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching data: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "tensorflow_available": TENSORFLOW_AVAILABLE,
+        "gap_filling_enabled": TENSORFLOW_AVAILABLE
+    }
 
 if __name__ == "__main__":
     import uvicorn

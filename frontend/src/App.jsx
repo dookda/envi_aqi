@@ -67,7 +67,9 @@ function App() {
   };
 
   useEffect(() => {
-    if (selectedStation) {
+    if (selectedStation && startDate && endDate) {
+      // Clear previous error when selecting new station
+      setError(null);
       handleFetchData();
     }
   }, [selectedStation, selectedParameter]);
@@ -190,8 +192,11 @@ function App() {
                   disabled={loading || !selectedStation}
                   className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition duration-200"
                 >
-                  {loading ? 'Loading...' : 'Fetch Data'}
+                  {loading ? 'Loading...' : 'Refresh Data'}
                 </button>
+                <p className="text-xs text-gray-500 text-center mt-2">
+                  Data auto-loads when selecting a station or parameter
+                </p>
               </div>
             </div>
 
@@ -224,8 +229,21 @@ function App() {
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">
                 Air Quality Trend
+                {loading && (
+                  <span className="ml-3 text-sm text-blue-600 animate-pulse">
+                    Loading data...
+                  </span>
+                )}
               </h2>
-              <div className="h-96">
+              <div className="h-96 relative">
+                {loading && (
+                  <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                    <div className="flex flex-col items-center">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                      <p className="mt-3 text-gray-600">Fetching air quality data...</p>
+                    </div>
+                  </div>
+                )}
                 <Chart data={data} parameter={selectedParameter} />
               </div>
             </div>

@@ -60,7 +60,31 @@ envi_aqi/
 
 ## Quick Start
 
-### Frontend Setup
+### Docker (Recommended)
+
+The easiest way to run the entire stack:
+
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+Services available at:
+- **Frontend**: http://localhost:5173
+- **Backend**: http://localhost:8000
+- **API Docs**: http://localhost:8000/docs
+
+See [DOCKER.md](DOCKER.md) for complete Docker documentation.
+
+### Manual Setup
+
+#### Frontend Setup
 
 ```bash
 cd frontend
@@ -70,7 +94,7 @@ npm run dev
 
 The frontend will be available at `http://localhost:5173`
 
-### Backend Setup
+#### Backend Setup
 
 ```bash
 cd backend

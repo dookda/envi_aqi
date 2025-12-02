@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend (Production)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: air4thai-backend-prod
+    ports:
+      - "8000:8000"
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - DEBUG=False
+      - CORS_ORIGINS=http://localhost:80,https://yourdomain.com
+    restart: always
+    networks:
+      - air4thai-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # React Frontend (Production with Nginx)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: air4thai-frontend-prod
+    ports:
+      - "80:80"
+    environment:
+      - NODE_ENV=production
+    restart: always
+    networks:
+      - air4thai-network
+    depends_on:
+      - backend
+
+networks:
+  air4thai-network:
+    driver: bridge
