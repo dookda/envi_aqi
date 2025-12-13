@@ -4,6 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import PageHeader from '../components/organisms/PageHeader';
 import AQILegend from '../components/organisms/AQILegend';
 import StationDetailsPanel from '../components/organisms/StationDetailsPanel';
+import FloatingMenu from '../components/organisms/FloatingMenu';
 import { LoadingState, ErrorState } from '../components/molecules';
 import { Card } from '../components/atoms';
 import { getAQIColor, getAQILabel } from '../utils/helpers/aqi';
@@ -15,8 +16,11 @@ export default function FullMapPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedStation, setSelectedStation] = useState(null);
+    const [showLegend, setShowLegend] = useState(true);
+    const [showDataSource, setShowDataSource] = useState(true);
     const mapContainer = useRef(null);
     const map = useRef(null);
+
 
     // Fetch AQI data
     useEffect(() => {
@@ -246,8 +250,12 @@ export default function FullMapPage() {
                 className="absolute top-0 left-0 right-0 z-dropdown"
             />
 
-            {/* Legend */}
-            <AQILegend position="bottom-left" />
+            {/* Legend - conditionally rendered */}
+            {showLegend && (
+                <div className="transition-all duration-300 ease-out animate-slide-in-left">
+                    <AQILegend position="bottom-left" />
+                </div>
+            )}
 
             {/* Station Details Panel */}
             <StationDetailsPanel
@@ -256,14 +264,45 @@ export default function FullMapPage() {
                 position="top-right"
             />
 
-            {/* Data Source Attribution */}
-            <div className="absolute bottom-6 right-6 z-dropdown">
-                <Card variant="glass" padding="sm">
-                    <p className="text-xs text-gray-600">
-                        Data: <a href="http://air4thai.pcd.go.th" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Air4Thai PCD</a>
-                    </p>
-                </Card>
-            </div>
+            {/* Data Source Attribution - conditionally rendered */}
+            {showDataSource && (
+                <div className="absolute bottom-24 right-6 z-dropdown transition-all duration-300 ease-out">
+                    <Card variant="glass" padding="sm">
+                        <p className="text-xs text-gray-600">
+                            Data: <a href="http://air4thai.pcd.go.th" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Air4Thai PCD</a>
+                        </p>
+                    </Card>
+                </div>
+            )}
+
+            {/* Floating Menu */}
+            <FloatingMenu
+                items={[
+                    {
+                        id: 'legend',
+                        label: 'Toggle AQI Legend',
+                        isActive: showLegend,
+                        onClick: () => setShowLegend(!showLegend),
+                        icon: (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        ),
+                    },
+                    {
+                        id: 'datasource',
+                        label: 'Toggle Data Source',
+                        isActive: showDataSource,
+                        onClick: () => setShowDataSource(!showDataSource),
+                        icon: (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        ),
+                    },
+                ]}
+                position="bottom-right"
+            />
         </div>
     );
 }

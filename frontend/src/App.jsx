@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import Map from './components/Map';
 import Chart from './components/Chart';
+import FloatingMenu from './components/organisms/FloatingMenu';
 import { fetchAirQualityData, fetchAirQualityDataWithGapFilling, getStations, getParameters, getBasemaps } from './services/api';
 
 function App() {
@@ -24,7 +24,13 @@ function App() {
   const [error, setError] = useState(null);
   const [useAIFilling, setUseAIFilling] = useState(true); // Enable by default
 
-  // Collapse states for panels
+  // Panel visibility states (show/hide entire panels)
+  const [showPanels, setShowPanels] = useState({
+    controls: true,
+    chart: true
+  });
+
+  // Collapse states for panels (accordion behavior within panels)
   const [collapsedPanels, setCollapsedPanels] = useState({
     station: false,
     parameter: false,
@@ -34,6 +40,13 @@ function App() {
 
   const togglePanel = (panelName) => {
     setCollapsedPanels(prev => ({
+      ...prev,
+      [panelName]: !prev[panelName]
+    }));
+  };
+
+  const togglePanelVisibility = (panelName) => {
+    setShowPanels(prev => ({
       ...prev,
       [panelName]: !prev[panelName]
     }));
@@ -137,30 +150,22 @@ function App() {
       </div>
 
       {/* Header - Floating */}
-      <header className="absolute top-0 left-0 right-0 z-10 bg-white/60 backdrop-blur-md shadow-lg border-b border-white/20">
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+      <header className="absolute top-0 left-0 right-0 z-10 bg-white/65 backdrop-blur-md shadow-lg border-b border-white/30">
+        <div className="container mx-auto px-4 py-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
-              AQI Dashboard
+              Thailand AQI Map
             </h1>
             <p className="text-gray-600 text-sm">
-              Real-time Air Quality Monitoring in Thailand
+              Real-time Air Quality Index across Thailand
             </p>
           </div>
-          <Link
-            to="/full-map"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 text-sm flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
-            View Full Map
-          </Link>
         </div>
       </header>
 
       {/* Control Panel - Floating Left */}
-      <div className="absolute top-24 left-4 z-20 w-80 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-4">
+      {showPanels.controls && (
+      <div className="absolute top-24 left-4 z-20 w-80 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-4 transition-all duration-300 ease-out">
         {/* Station Info */}
         <div className="bg-white/65 backdrop-blur-md rounded-lg shadow-lg border border-white/30">
           <div
@@ -315,9 +320,11 @@ function App() {
           </div>
         )}
       </div>
+      )}
 
       {/* Chart - Floating Bottom Left */}
-      <div className="absolute bottom-4 left-4 z-20 w-[calc(100%-2rem)] max-w-2xl">
+      {showPanels.chart && (
+      <div className="absolute bottom-4 left-4 z-20 w-[calc(100%-2rem)] max-w-2xl transition-all duration-300 ease-out">
         <div className="bg-white/65 backdrop-blur-md rounded-lg shadow-lg border border-white/30">
           <div
             className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/20"
@@ -357,9 +364,39 @@ function App() {
           )}
         </div>
       </div>
+      )}
+
+      {/* FloatingMenu - Control Panel Toggles */}
+      <FloatingMenu
+        items={[
+          {
+            id: 'controls',
+            label: 'Toggle Control Panel',
+            isActive: showPanels.controls,
+            onClick: () => togglePanelVisibility('controls'),
+            icon: (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            ),
+          },
+          {
+            id: 'chart',
+            label: 'Toggle Chart',
+            isActive: showPanels.chart,
+            onClick: () => togglePanelVisibility('chart'),
+            icon: (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            ),
+          },
+        ]}
+        position="bottom-right"
+      />
 
       {/* Footer - Floating Bottom Right */}
-      <div className="absolute bottom-4 right-4 z-20 bg-white/65 backdrop-blur-md rounded-lg shadow-lg border border-white/30 px-4 py-2">
+      <div className="absolute bottom-24 right-4 z-10 bg-white/65 backdrop-blur-md rounded-lg shadow-lg border border-white/30 px-4 py-2">
         <p className="text-xs text-gray-600">
           Data source: <a href="http://air4thai.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Air4Thai</a>
         </p>
