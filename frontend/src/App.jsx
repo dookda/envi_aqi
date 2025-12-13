@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Map from './components/Map';
 import Chart from './components/Chart';
 import { fetchAirQualityData, fetchAirQualityDataWithGapFilling, getStations, getParameters, getBasemaps } from './services/api';
@@ -137,13 +138,24 @@ function App() {
 
       {/* Header - Floating */}
       <header className="absolute top-0 left-0 right-0 z-10 bg-white/60 backdrop-blur-md shadow-lg border-b border-white/20">
-        <div className="container mx-auto px-4 py-3">
-          <h1 className="text-2xl font-bold text-gray-800">
-            AQI Dashboard
-          </h1>
-          <p className="text-gray-600 text-sm">
-            Real-time Air Quality Monitoring in Thailand
-          </p>
+        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">
+              AQI Dashboard
+            </h1>
+            <p className="text-gray-600 text-sm">
+              Real-time Air Quality Monitoring in Thailand
+            </p>
+          </div>
+          <Link
+            to="/full-map"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 text-sm flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+            View Full Map
+          </Link>
         </div>
       </header>
 
