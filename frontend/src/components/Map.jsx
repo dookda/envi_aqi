@@ -37,7 +37,12 @@ const Map = ({ stations, selectedStation, onStationSelect, basemapStyle }) => {
       zoom: 6
     });
 
-    map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
+    // Apply globe projection when style loads
+    map.current.on('style.load', () => {
+      map.current.setProjection({
+        type: 'globe'
+      });
+    });
 
     // Initialize popup
     popup.current = new maplibregl.Popup({
@@ -210,14 +215,67 @@ const Map = ({ stations, selectedStation, onStationSelect, basemapStyle }) => {
     }
   }, [aqiData, stations, selectedStation, onStationSelect]);
 
+  const handleZoomIn = () => {
+    if (map.current) {
+      map.current.zoomIn({ duration: 300 });
+    }
+  };
+
+  const handleZoomOut = () => {
+    if (map.current) {
+      map.current.zoomOut({ duration: 300 });
+    }
+  };
+
+  const handleResetNorth = () => {
+    if (map.current) {
+      map.current.resetNorth({ duration: 300 });
+    }
+  };
+
   return (
     <div className="relative w-full h-full">
-      <style>{`
-        .maplibregl-ctrl-top-right {
-          top: 100px;
-        }
-      `}</style>
       <div ref={mapContainer} className="w-full h-full rounded-lg" />
+
+      {/* Custom Circular Map Controls */}
+      <div className="absolute top-24 right-4 flex flex-col gap-2">
+        {/* Zoom In */}
+        <button
+          onClick={handleZoomIn}
+          className="w-10 h-10 rounded-full bg-orange-50/65 backdrop-blur-md border border-orange-200/30 shadow-lg flex items-center justify-center hover:bg-orange-100/80 transition-all duration-200"
+          aria-label="Zoom in"
+          title="Zoom in"
+        >
+          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+
+        {/* Zoom Out */}
+        <button
+          onClick={handleZoomOut}
+          className="w-10 h-10 rounded-full bg-orange-50/65 backdrop-blur-md border border-orange-200/30 shadow-lg flex items-center justify-center hover:bg-orange-100/80 transition-all duration-200"
+          aria-label="Zoom out"
+          title="Zoom out"
+        >
+          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M20 12H4" />
+          </svg>
+        </button>
+
+        {/* Reset North */}
+        <button
+          onClick={handleResetNorth}
+          className="w-10 h-10 rounded-full bg-orange-50/65 backdrop-blur-md border border-orange-200/30 shadow-lg flex items-center justify-center hover:bg-orange-100/80 transition-all duration-200"
+          aria-label="Reset bearing to north"
+          title="Reset bearing to north"
+        >
+          <svg className="w-6 h-6 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2L6 12h4v8h4v-8h4L12 2z" />
+            <text x="12" y="18" fontSize="8" fontWeight="bold" fill="white" textAnchor="middle">N</text>
+          </svg>
+        </button>
+      </div>
     </div>
   );
 };

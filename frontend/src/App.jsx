@@ -26,8 +26,9 @@ function App() {
 
   // Panel visibility states (show/hide entire panels)
   const [showPanels, setShowPanels] = useState({
-    controls: true,
-    chart: true
+    controls: false,
+    chart: false,
+    basemap: false
   });
 
   // Collapse states for panels (accordion behavior within panels)
@@ -35,7 +36,8 @@ function App() {
     station: false,
     parameter: false,
     dateRange: false,
-    chart: false
+    chart: false,
+    basemap: false
   });
 
   const togglePanel = (panelName) => {
@@ -46,10 +48,22 @@ function App() {
   };
 
   const togglePanelVisibility = (panelName) => {
-    setShowPanels(prev => ({
-      ...prev,
-      [panelName]: !prev[panelName]
-    }));
+    setShowPanels(prev => {
+      // If the panel is already open, close it
+      if (prev[panelName]) {
+        return {
+          ...prev,
+          [panelName]: false
+        };
+      }
+      // Otherwise, close all panels and open only the clicked one
+      return {
+        controls: false,
+        chart: false,
+        basemap: false,
+        [panelName]: true
+      };
+    });
   };
 
   const handleStationSelect = (station) => {
@@ -150,7 +164,7 @@ function App() {
       </div>
 
       {/* Header - Floating */}
-      <header className="absolute top-0 left-0 right-0 z-10 bg-white/65 backdrop-blur-md shadow-lg border-b border-white/30">
+      <header className="absolute top-0 left-0 right-0 z-10 bg-orange-50/65 backdrop-blur-md shadow-lg border-b border-orange-200/30">
         <div className="container mx-auto px-4 py-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
@@ -167,7 +181,7 @@ function App() {
       {showPanels.controls && (
       <div className="absolute top-24 left-4 z-20 w-80 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-4 transition-all duration-300 ease-out">
         {/* Station Info */}
-        <div className="bg-white/65 backdrop-blur-md rounded-lg shadow-lg border border-white/30">
+        <div className="bg-orange-50/65 backdrop-blur-md rounded-lg shadow-lg border border-orange-200/30">
           <div
             className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/20"
             onClick={() => togglePanel('station')}
@@ -208,7 +222,7 @@ function App() {
         </div>
 
         {/* Parameter Selection */}
-        <div className="bg-white/65 backdrop-blur-md rounded-lg shadow-lg border border-white/30">
+        <div className="bg-orange-50/65 backdrop-blur-md rounded-lg shadow-lg border border-orange-200/30">
           <div
             className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/20"
             onClick={() => togglePanel('parameter')}
@@ -246,7 +260,7 @@ function App() {
         </div>
 
         {/* Date Range */}
-        <div className="bg-white/65 backdrop-blur-md rounded-lg shadow-lg border border-white/30">
+        <div className="bg-orange-50/65 backdrop-blur-md rounded-lg shadow-lg border border-orange-200/30">
           <div
             className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/20"
             onClick={() => togglePanel('dateRange')}
@@ -322,10 +336,52 @@ function App() {
       </div>
       )}
 
+      {/* Basemap Selection - Floating Right */}
+      {showPanels.basemap && (
+      <div className="absolute top-24 right-16 z-20 w-64 transition-all duration-300 ease-out">
+        <div className="bg-orange-50/65 backdrop-blur-md rounded-lg shadow-lg border border-orange-200/30">
+          <div
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/20"
+            onClick={() => togglePanel('basemap')}
+          >
+            <h2 className="text-lg font-semibold text-gray-800">
+              Basemap Style
+            </h2>
+            <svg
+              className={`w-5 h-5 text-gray-600 transition-transform duration-200 ${collapsedPanels.basemap ? '' : 'rotate-180'}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+          {!collapsedPanels.basemap && (
+            <div className="px-4 pb-4">
+              <select
+                value={selectedBasemap.id}
+                onChange={(e) => {
+                  const basemap = basemaps.find(b => b.id === e.target.value);
+                  setSelectedBasemap(basemap);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              >
+                {basemaps.map(basemap => (
+                  <option key={basemap.id} value={basemap.id}>
+                    {basemap.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+      </div>
+      )}
+
       {/* Chart - Floating Bottom Left */}
       {showPanels.chart && (
       <div className="absolute bottom-4 left-4 z-20 w-[calc(100%-2rem)] max-w-2xl transition-all duration-300 ease-out">
-        <div className="bg-white/65 backdrop-blur-md rounded-lg shadow-lg border border-white/30">
+        <div className="bg-orange-50/65 backdrop-blur-md rounded-lg shadow-lg border border-orange-200/30">
           <div
             className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/20"
             onClick={() => togglePanel('chart')}
@@ -391,12 +447,23 @@ function App() {
               </svg>
             ),
           },
+          {
+            id: 'basemap',
+            label: 'Toggle Basemap Selection',
+            isActive: showPanels.basemap,
+            onClick: () => togglePanelVisibility('basemap'),
+            icon: (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            ),
+          },
         ]}
         position="bottom-right"
       />
 
       {/* Footer - Floating Bottom Right */}
-      <div className="absolute bottom-24 right-4 z-10 bg-white/65 backdrop-blur-md rounded-lg shadow-lg border border-white/30 px-4 py-2">
+      <div className="absolute bottom-24 right-4 z-10 bg-orange-50/65 backdrop-blur-md rounded-lg shadow-lg border border-orange-200/30 px-4 py-2">
         <p className="text-xs text-gray-600">
           Data source: <a href="http://air4thai.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Air4Thai</a>
         </p>

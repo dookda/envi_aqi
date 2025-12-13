@@ -30,8 +30,8 @@ const FloatingMenu = ({ items, position = 'bottom-right' }) => {
               w-12 h-12 rounded-full flex items-center justify-center
               shadow-lg transition-all duration-300 ease-out backdrop-blur-md
               ${item.isActive
-                                ? 'bg-primary-600/65 text-white border border-primary-400/30'
-                                : 'bg-white/65 text-gray-700 hover:bg-white/80 border border-white/30'
+                                ? 'bg-orange-500/65 text-white border border-orange-400/30'
+                                : 'bg-orange-50/65 text-gray-700 hover:bg-orange-100/80 border border-orange-200/30'
                             }
               ${isOpen
                                 ? 'opacity-100 translate-y-0 scale-100'
@@ -57,8 +57,8 @@ const FloatingMenu = ({ items, position = 'bottom-right' }) => {
           shadow-xl transition-all duration-300 ease-out backdrop-blur-md
           border
           ${isOpen
-                        ? 'bg-gray-800/65 text-white rotate-45 border-gray-700/30'
-                        : 'bg-primary-600/65 text-white hover:bg-primary-700/65 border-primary-400/30'
+                        ? 'bg-orange-600/65 text-white rotate-45 border-orange-500/30'
+                        : 'bg-orange-500/65 text-white hover:bg-orange-600/65 border-orange-400/30'
                     }
         `}
                 aria-label={isOpen ? 'Close menu' : 'Open menu'}
