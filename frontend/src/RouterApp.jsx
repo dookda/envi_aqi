@@ -10,7 +10,7 @@ import FullMapPage from './pages/FullMapPage';
  */
 const RouterApp = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/env">
       <div className="relative w-screen h-screen overflow-hidden">
         {/* Navigation Bar */}
         <nav className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 shadow-lg">
