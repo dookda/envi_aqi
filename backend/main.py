@@ -79,7 +79,7 @@ AIR4THAI_BASE_URL = "http://air4thai.com/forweb/getHistoryData.php"
 async def root():
     return {"message": "Air4Thai API Backend", "version": "1.0.0"}
 
-@app.post("/api/air-quality")
+@app.post("/enviapi/air-quality")
 async def get_air_quality_data(request: AirQualityRequest):
     """
     Fetch air quality data from Air4Thai API
@@ -105,7 +105,7 @@ async def get_air_quality_data(request: AirQualityRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@app.get("/api/stations", response_model=List[Station])
+@app.get("/enviapi/stations", response_model=List[Station])
 async def get_stations():
     """
     Get list of monitoring stations
@@ -121,7 +121,7 @@ async def get_stations():
         {"id": "54t", "name": "Lamphun", "lat": 18.5744, "lon": 99.0083},
     ]
 
-@app.get("/api/parameters", response_model=List[Parameter])
+@app.get("/enviapi/parameters", response_model=List[Parameter])
 async def get_parameters():
     """
     Get available parameters for air quality measurement
@@ -135,7 +135,7 @@ async def get_parameters():
         {"id": "SO2", "name": "Sulfur Dioxide (SO2)", "unit": "ppb", "color": "#eb4d4b"}
     ]
 
-@app.post("/api/fill-gaps")
+@app.post("/enviapi/fill-gaps")
 async def fill_gaps(request: GapFillRequest):
     """
     Fill gaps in air quality data using LSTM model (Example 1: Random 25% pattern)
@@ -179,7 +179,7 @@ async def fill_gaps(request: GapFillRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error filling gaps: {str(e)}")
 
-@app.post("/api/air-quality-with-gaps-filled")
+@app.post("/enviapi/air-quality-with-gaps-filled")
 async def get_air_quality_with_gaps_filled(request: AirQualityRequest):
     """
     Fetch air quality data and automatically fill any gaps using LSTM
@@ -236,7 +236,7 @@ async def get_air_quality_with_gaps_filled(request: AirQualityRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
-@app.post("/api/enhanced-gap-filling")
+@app.post("/enviapi/enhanced-gap-filling")
 async def enhanced_gap_filling(request: EnhancedGapFillRequest):
     """
     Fill gaps using Enhanced LSTM model with 95%+ accuracy target
@@ -286,7 +286,7 @@ async def enhanced_gap_filling(request: EnhancedGapFillRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error in enhanced gap filling: {str(e)}")
 
-@app.post("/api/detect-anomalies")
+@app.post("/enviapi/detect-anomalies")
 async def detect_anomalies_endpoint(request: AnomalyDetectionRequest):
     """
     Detect anomalies using multi-method approach
@@ -329,7 +329,7 @@ async def detect_anomalies_endpoint(request: AnomalyDetectionRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error in anomaly detection: {str(e)}")
 
-@app.get("/api/anomaly-summary")
+@app.get("/enviapi/anomaly-summary")
 async def get_anomaly_summary(stationID: str, param: str, startDate: str, endDate: str):
     """
     Get anomaly summary for a station and parameter
@@ -403,7 +403,7 @@ async def get_anomaly_summary(stationID: str, param: str, startDate: str, endDat
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
-@app.get("/api/model-metrics")
+@app.get("/enviapi/model-metrics")
 async def get_model_metrics(model_name: str = "enhanced_lstm_pm25"):
     """
     Get model performance metrics and metadata
@@ -456,7 +456,7 @@ async def get_model_metrics(model_name: str = "enhanced_lstm_pm25"):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error loading model metrics: {str(e)}")
 
-@app.post("/api/chatbot")
+@app.post("/enviapi/chatbot")
 async def chatbot_query(request: ChatbotRequest):
     """
     AI Chatbot for air quality Q&A

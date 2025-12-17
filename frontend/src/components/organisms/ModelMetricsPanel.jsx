@@ -20,7 +20,7 @@ const ModelMetricsPanel = ({
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/model-metrics?model_name=${modelName}`);
+      const response = await fetch(`/enviapi/model-metrics?model_name=${modelName}`);
       const data = await response.json();
 
       if (data.success && data.model_exists) {

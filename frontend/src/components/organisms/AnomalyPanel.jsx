@@ -26,7 +26,7 @@ const AnomalyPanel = ({
     setError(null);
     try {
       const response = await fetch(
-        `/api/anomaly-summary?stationID=${stationID}&param=${param}&startDate=${startDate}&endDate=${endDate}`
+        `/enviapi/anomaly-summary?stationID=${stationID}&param=${param}&startDate=${startDate}&endDate=${endDate}`
       );
       const data = await response.json();
 

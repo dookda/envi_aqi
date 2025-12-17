@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const BASE_URL = 'http://air4thai.com/forweb/getHistoryData.php';
-const BACKEND_URL = 'http://localhost:8000';
+const BACKEND_URL = 'http://localhost:5600';
 
 /**
  * Fetch historical air quality data from Air4Thai API
@@ -44,7 +44,7 @@ export const fetchAirQualityData = async ({ stationID, param, startDate, endDate
  */
 export const fetchAirQualityDataWithGapFilling = async ({ stationID, param, startDate, endDate }) => {
   try {
-    const response = await axios.post(`${BACKEND_URL}/api/air-quality-with-gaps-filled`, {
+    const response = await axios.post(`${BACKEND_URL}/enviapi/air-quality-with-gaps-filled`, {
       stationID,
       param,
       startDate,
