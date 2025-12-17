@@ -525,6 +525,25 @@ async def health_check():
         "anomaly_detection_enabled": ENHANCED_AI_AVAILABLE
     }
 
+@app.get("/env")
+async def env_info():
+    """Environment and service information endpoint"""
+    return {
+        "service": "Air4Thai API",
+        "version": "1.0.0",
+        "environment": os.getenv("DEBUG", "False") == "False" and "production" or "development",
+        "port": os.getenv("API_PORT", "8000"),
+        "status": "running",
+        "timestamp": datetime.now().isoformat(),
+        "features": {
+            "tensorflow": TENSORFLOW_AVAILABLE,
+            "enhanced_ai": ENHANCED_AI_AVAILABLE,
+            "chatbot": CHATBOT_AVAILABLE,
+            "gap_filling": TENSORFLOW_AVAILABLE,
+            "anomaly_detection": ENHANCED_AI_AVAILABLE
+        }
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

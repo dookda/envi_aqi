@@ -40,6 +40,31 @@ services:
       - air4thai-network
     depends_on:
       - backend
+      - backend-v2
+
+  # Backend Service on port 5500 (for /env endpoint)
+  backend-v2:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: air4thai-backend-v2-prod
+    ports:
+      - "127.0.0.1:5500:5500"  # Only expose to localhost
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=5500
+      - DEBUG=False
+      - CORS_ORIGINS=http://localhost:80,https://yourdomain.com
+    restart: always
+    networks:
+      - air4thai-network
+    command: uvicorn main:app --host 0.0.0.0 --port 5500
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5500/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 networks:
   air4thai-network:
