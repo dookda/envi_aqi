@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const BASE_URL = 'http://air4thai.com/forweb/getHistoryData.php';
-const BACKEND_URL = 'http://localhost:5600';
+// Use environment variable or fallback to relative path for production
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL || window.location.origin;
 
 /**
  * Fetch historical air quality data from Air4Thai API

@@ -525,7 +525,7 @@ async def health_check():
         "anomaly_detection_enabled": ENHANCED_AI_AVAILABLE
     }
 
-@app.get("/env")
+@app.get("/enviapi/env")
 async def env_info():
     """Environment and service information endpoint"""
     return {

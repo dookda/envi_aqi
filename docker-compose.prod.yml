@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: air4thai-backend-prod
     ports:
-      - "127.0.0.1:5600:5600"
+      - "5600:5600"
     environment:
       - API_HOST=0.0.0.0
       - API_PORT=5600
@@ -31,7 +31,7 @@ services:
       target: production
     container_name: air4thai-frontend-prod
     ports:
-      - "127.0.0.1:5500:80"  # Only expose to localhost on port 5500
+      - "5500:80"  # Only expose to localhost on port 5500
     environment:
       - NODE_ENV=production
     restart: always
