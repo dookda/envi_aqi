@@ -13,7 +13,7 @@ services:
       - API_HOST=0.0.0.0
       - API_PORT=8000
       - DEBUG=False
-      - CORS_ORIGINS=http://localhost:80,https://yourdomain.com
+      - CORS_ORIGINS=http://localhost:80,https://geodev.fun
     restart: always
     networks:
       - air4thai-network
@@ -54,7 +54,7 @@ services:
       - API_HOST=0.0.0.0
       - API_PORT=5500
       - DEBUG=False
-      - CORS_ORIGINS=http://localhost:80,https://yourdomain.com
+      - CORS_ORIGINS=http://localhost:80,https://geodev.fun
     restart: always
     networks:
       - air4thai-network
