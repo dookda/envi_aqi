@@ -238,7 +238,7 @@ const Map = ({ stations, selectedStation, onStationSelect, basemapStyle }) => {
       <div ref={mapContainer} className="w-full h-full rounded-lg" />
 
       {/* Custom Circular Map Controls */}
-      <div className="absolute top-24 right-4 flex flex-col gap-2">
+      <div className="absolute top-32 right-4 flex flex-col gap-2">
         {/* Zoom In */}
         <button
           onClick={handleZoomIn}

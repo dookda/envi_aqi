@@ -142,14 +142,14 @@ const LiveMapPage = () => {
       )}
 
       {/* Map Title Overlay */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
+      <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-10">
         <div className="bg-white bg-opacity-95 backdrop-blur-sm shadow-lg rounded-full px-6 py-3">
           <h1 className="text-lg font-bold text-gray-800">Live Air Quality Map - Bangkok</h1>
         </div>
       </div>
 
       {/* Stats Overlay */}
-      <div className="absolute top-20 left-4 z-10 space-y-2">
+      <div className="absolute top-36 left-4 z-10 space-y-2">
         <div className="bg-white bg-opacity-95 backdrop-blur-sm shadow-lg rounded-lg px-4 py-3">
           <p className="text-xs text-gray-500">Active Stations</p>
           <p className="text-2xl font-bold text-primary-600">{stations.length}</p>

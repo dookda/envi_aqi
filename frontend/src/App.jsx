@@ -164,7 +164,7 @@ function App() {
       </div>
 
       {/* Header - Floating */}
-      <header className="absolute top-0 left-0 right-0 z-10 bg-orange-50/65 backdrop-blur-md shadow-lg border-b border-orange-200/30">
+      <header className="absolute top-16 left-0 right-0 z-10 bg-orange-50/65 backdrop-blur-md shadow-lg border-b border-orange-200/30">
         <div className="container mx-auto px-4 py-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
@@ -179,7 +179,7 @@ function App() {
 
       {/* Control Panel - Floating Left */}
       {showPanels.controls && (
-      <div className="absolute top-24 left-4 z-20 w-80 max-h-[calc(100vh-7rem)] overflow-y-auto space-y-4 transition-all duration-300 ease-out">
+      <div className="absolute top-32 left-4 z-20 w-80 max-h-[calc(100vh-9rem)] overflow-y-auto space-y-4 transition-all duration-300 ease-out">
         {/* Station Info */}
         <div className="bg-orange-50/65 backdrop-blur-md rounded-lg shadow-lg border border-orange-200/30">
           <div
@@ -338,7 +338,7 @@ function App() {
 
       {/* Basemap Selection - Floating Right */}
       {showPanels.basemap && (
-      <div className="absolute top-24 right-16 z-20 w-64 transition-all duration-300 ease-out">
+      <div className="absolute top-32 right-16 z-20 w-64 transition-all duration-300 ease-out">
         <div className="bg-orange-50/65 backdrop-blur-md rounded-lg shadow-lg border border-orange-200/30">
           <div
             className="flex items-center justify-between p-4 cursor-pointer hover:bg-white/20"
