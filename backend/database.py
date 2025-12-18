@@ -1,14 +1,14 @@
 """
 Database connection and ORM models using SQLAlchemy
 """
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy import Column, Integer, String, Float, DateTime, Boolean, JSON, Index
 from datetime import datetime
 import os
 
 # Database URL from environment variable
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://air4thai_user:air4thai_password@localhost:5432/air4thai")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:1234@localhost:5433/air4thai")
 # Convert to async URL
 ASYNC_DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
 
@@ -21,8 +21,8 @@ engine = create_async_engine(
     max_overflow=20
 )
 
-# Create async session maker
-AsyncSessionLocal = async_sessionmaker(
+# Create async session maker (compatible with SQLAlchemy 2.0+)
+AsyncSessionLocal = sessionmaker(
     engine,
     class_=AsyncSession,
     expire_on_commit=False
@@ -104,7 +104,7 @@ class ModelTrainingData(Base):
     rmse = Column(Float)
     r2_score = Column(Float)
     model_path = Column(String)
-    metadata = Column(JSON)
+    model_metadata = Column(JSON)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -120,7 +120,7 @@ class DetectedAnomaly(Base):
     anomaly_score = Column(Float)
     detection_method = Column(String(50))
     severity = Column(String(20))
-    metadata = Column(JSON)
+    anomaly_metadata = Column(JSON)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

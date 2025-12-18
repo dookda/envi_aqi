@@ -32,6 +32,7 @@ const HistoricalDataPage = () => {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [predictionMetrics, setPredictionMetrics] = useState(null);
 
   // UI state
   const [useGapFilling, setUseGapFilling] = useState(true);
@@ -45,6 +46,7 @@ const HistoricalDataPage = () => {
   });
   const [showMap, setShowMap] = useState(true);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [isGlobeView, setIsGlobeView] = useState(true);
 
   // Initialize map
   useEffect(() => {
@@ -57,9 +59,13 @@ const HistoricalDataPage = () => {
         sources: {
           'osm-tiles': {
             type: 'raster',
-            tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tiles: [
+              'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+              'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+              'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
+            ],
             tileSize: 256,
-            attribution: '© OpenStreetMap contributors',
+            attribution: '© OpenStreetMap contributors, © CARTO',
           },
         },
         layers: [
@@ -72,6 +78,15 @@ const HistoricalDataPage = () => {
       },
       center: [100.5018, 13.7563],
       zoom: 5.5,
+    });
+
+    // Apply globe projection when style loads
+    map.current.on('style.load', () => {
+      if (isGlobeView) {
+        map.current.setProjection({
+          type: 'globe'
+        });
+      }
     });
 
     // Add navigation controls
@@ -91,6 +106,21 @@ const HistoricalDataPage = () => {
       }
     };
   }, []);
+
+  // Toggle between globe and flat projection
+  useEffect(() => {
+    if (!map.current) return;
+
+    try {
+      if (isGlobeView) {
+        map.current.setProjection({ type: 'globe' });
+      } else {
+        map.current.setProjection({ type: 'mercator' });
+      }
+    } catch (error) {
+      console.warn('Projection change error:', error);
+    }
+  }, [isGlobeView]);
 
   // Add station markers
   useEffect(() => {
@@ -297,6 +327,13 @@ const HistoricalDataPage = () => {
         }
 
         setChartData(stationData);
+
+        // Store prediction metrics if gap filling was used
+        if (result.prediction_metrics) {
+          setPredictionMetrics(result.prediction_metrics);
+        } else {
+          setPredictionMetrics(null);
+        }
       } else if (Array.isArray(result)) {
         setChartData(result);
       } else if (result && typeof result === 'object') {
@@ -361,6 +398,23 @@ const HistoricalDataPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Globe Toggle Button */}
+          <button
+            onClick={() => setIsGlobeView(!isGlobeView)}
+            className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm shadow-lg rounded-lg p-2.5 border border-gray-200 hover:bg-gray-50 transition-all duration-200 group"
+            title={isGlobeView ? "Switch to Flat Map" : "Switch to Globe View"}
+          >
+            {isGlobeView ? (
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+          </button>
         </div>
 
         {/* Right Panel - Chart and Controls */}
@@ -528,7 +582,7 @@ const HistoricalDataPage = () => {
 
             {/* Statistics */}
             {chartData.length > 0 && (
-              <div className="grid grid-cols-3 gap-4 mt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                 <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
                   <p className="text-xs text-gray-500 mb-1">Total Data Points</p>
                   <p className="text-2xl font-bold text-gray-800">{stats.totalPoints}</p>
@@ -541,6 +595,22 @@ const HistoricalDataPage = () => {
                   <p className="text-xs text-gray-500 mb-1">Data Completeness</p>
                   <p className="text-2xl font-bold text-green-600">{stats.completeness}%</p>
                 </div>
+                {predictionMetrics && useGapFilling && (
+                  <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-3 shadow-sm border-2 border-purple-300">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-xs text-purple-700 font-semibold">AI Prediction Accuracy</p>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                        predictionMetrics.confidence === 'high' ? 'bg-green-200 text-green-800' :
+                        predictionMetrics.confidence === 'medium' ? 'bg-yellow-200 text-yellow-800' :
+                        'bg-orange-200 text-orange-800'
+                      }`}>
+                        {predictionMetrics.confidence.toUpperCase()}
+                      </span>
+                    </div>
+                    <p className="text-2xl font-bold text-purple-700">{predictionMetrics.accuracy}%</p>
+                    <p className="text-[10px] text-purple-600 mt-0.5">MAE: {predictionMetrics.mae} μg/m³</p>
+                  </div>
+                )}
               </div>
             )}
           </div>

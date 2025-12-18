@@ -1,5 +1,5 @@
--- Initialize TimescaleDB Extension
-CREATE EXTENSION IF NOT EXISTS timescaledb;
+-- Initialize PostGIS Extension for spatial database capabilities
+CREATE EXTENSION IF NOT EXISTS postgis;
 
 -- Create air quality measurements table
 CREATE TABLE IF NOT EXISTS air_quality_measurements (
@@ -16,20 +16,19 @@ CREATE TABLE IF NOT EXISTS air_quality_measurements (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Convert to hypertable for time-series optimization
-SELECT create_hypertable('air_quality_measurements', 'timestamp', if_not_exists => TRUE);
-
--- Create indexes for faster queries
+-- Create indexes for faster queries (optimized for time-series data)
 CREATE INDEX IF NOT EXISTS idx_station_id ON air_quality_measurements(station_id, timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_parameter ON air_quality_measurements(parameter, timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_timestamp ON air_quality_measurements(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_station_param_time ON air_quality_measurements(station_id, parameter, timestamp DESC);
 
--- Create monitoring stations table
+-- Create monitoring stations table with PostGIS geometry
 CREATE TABLE IF NOT EXISTS monitoring_stations (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     latitude FLOAT NOT NULL,
     longitude FLOAT NOT NULL,
+    location GEOGRAPHY(POINT, 4326), -- PostGIS geometry column for spatial queries
     address TEXT,
     city VARCHAR(100),
     province VARCHAR(100),
@@ -37,6 +36,9 @@ CREATE TABLE IF NOT EXISTS monitoring_stations (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Create spatial index on location
+CREATE INDEX IF NOT EXISTS idx_stations_location ON monitoring_stations USING GIST(location);
 
 -- Create parameters reference table
 CREATE TABLE IF NOT EXISTS parameters (
@@ -61,16 +63,16 @@ INSERT INTO parameters (id, name, unit, threshold_good, threshold_moderate, thre
     ('SO2', 'Sulfur Dioxide', 'ppb', 35.0, 75.0, 185.0, 304.0)
 ON CONFLICT (id) DO NOTHING;
 
--- Insert default monitoring stations
-INSERT INTO monitoring_stations (id, name, latitude, longitude, city, province) VALUES
-    ('01t', 'Bang Khen, Bangkok', 13.8267, 100.6105, 'Bangkok', 'Bangkok'),
-    ('02t', 'Bang Khun Thian, Bangkok', 13.6447, 100.4225, 'Bangkok', 'Bangkok'),
-    ('03t', 'Bang Na, Bangkok', 13.6683, 100.6039, 'Bangkok', 'Bangkok'),
-    ('04t', 'Boom Rung Muang, Bangkok', 13.7486, 100.5092, 'Bangkok', 'Bangkok'),
-    ('05t', 'Chom Thong, Bangkok', 13.6803, 100.4372, 'Bangkok', 'Bangkok'),
-    ('50t', 'Chiang Mai', 18.7883, 98.9853, 'Chiang Mai', 'Chiang Mai'),
-    ('52t', 'Lampang', 18.2886, 99.4919, 'Lampang', 'Lampang'),
-    ('54t', 'Lamphun', 18.5744, 99.0083, 'Lamphun', 'Lamphun')
+-- Insert default monitoring stations with PostGIS geometry
+INSERT INTO monitoring_stations (id, name, latitude, longitude, location, city, province) VALUES
+    ('01t', 'Bang Khen, Bangkok', 13.8267, 100.6105, ST_SetSRID(ST_MakePoint(100.6105, 13.8267), 4326)::geography, 'Bangkok', 'Bangkok'),
+    ('02t', 'Bang Khun Thian, Bangkok', 13.6447, 100.4225, ST_SetSRID(ST_MakePoint(100.4225, 13.6447), 4326)::geography, 'Bangkok', 'Bangkok'),
+    ('03t', 'Bang Na, Bangkok', 13.6683, 100.6039, ST_SetSRID(ST_MakePoint(100.6039, 13.6683), 4326)::geography, 'Bangkok', 'Bangkok'),
+    ('04t', 'Boom Rung Muang, Bangkok', 13.7486, 100.5092, ST_SetSRID(ST_MakePoint(100.5092, 13.7486), 4326)::geography, 'Bangkok', 'Bangkok'),
+    ('05t', 'Chom Thong, Bangkok', 13.6803, 100.4372, ST_SetSRID(ST_MakePoint(100.4372, 13.6803), 4326)::geography, 'Bangkok', 'Bangkok'),
+    ('50t', 'Chiang Mai', 18.7883, 98.9853, ST_SetSRID(ST_MakePoint(98.9853, 18.7883), 4326)::geography, 'Chiang Mai', 'Chiang Mai'),
+    ('52t', 'Lampang', 18.2886, 99.4919, ST_SetSRID(ST_MakePoint(99.4919, 18.2886), 4326)::geography, 'Lampang', 'Lampang'),
+    ('54t', 'Lamphun', 18.5744, 99.0083, ST_SetSRID(ST_MakePoint(99.0083, 18.5744), 4326)::geography, 'Lamphun', 'Lamphun')
 ON CONFLICT (id) DO NOTHING;
 
 -- Create model training data table
@@ -86,7 +88,7 @@ CREATE TABLE IF NOT EXISTS model_training_data (
     rmse FLOAT,
     r2_score FLOAT,
     model_path TEXT,
-    metadata JSONB,
+    model_metadata JSONB,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -101,18 +103,18 @@ CREATE TABLE IF NOT EXISTS detected_anomalies (
     anomaly_score FLOAT,
     detection_method VARCHAR(50),
     severity VARCHAR(20),
-    metadata JSONB,
+    anomaly_metadata JSONB,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_anomalies_timestamp ON detected_anomalies(timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_anomalies_station ON detected_anomalies(station_id, timestamp DESC);
 
--- Create continuous aggregates for better query performance
-CREATE MATERIALIZED VIEW IF NOT EXISTS air_quality_hourly
-WITH (timescaledb.continuous) AS
+-- Create standard materialized views for aggregated data (without TimescaleDB)
+-- Hourly aggregates
+CREATE MATERIALIZED VIEW IF NOT EXISTS air_quality_hourly AS
 SELECT
-    time_bucket('1 hour', timestamp) AS hour,
+    DATE_TRUNC('hour', timestamp) AS hour,
     station_id,
     parameter,
     AVG(value) as avg_value,
@@ -120,19 +122,15 @@ SELECT
     MAX(value) as max_value,
     COUNT(*) as measurement_count
 FROM air_quality_measurements
-GROUP BY hour, station_id, parameter;
+GROUP BY DATE_TRUNC('hour', timestamp), station_id, parameter;
 
-SELECT add_continuous_aggregate_policy('air_quality_hourly',
-    start_offset => INTERVAL '3 days',
-    end_offset => INTERVAL '1 hour',
-    schedule_interval => INTERVAL '1 hour',
-    if_not_exists => TRUE);
+CREATE INDEX IF NOT EXISTS idx_hourly_hour ON air_quality_hourly(hour DESC);
+CREATE INDEX IF NOT EXISTS idx_hourly_station ON air_quality_hourly(station_id, hour DESC);
 
--- Create daily aggregates
-CREATE MATERIALIZED VIEW IF NOT EXISTS air_quality_daily
-WITH (timescaledb.continuous) AS
+-- Daily aggregates
+CREATE MATERIALIZED VIEW IF NOT EXISTS air_quality_daily AS
 SELECT
-    time_bucket('1 day', timestamp) AS day,
+    DATE_TRUNC('day', timestamp) AS day,
     station_id,
     parameter,
     AVG(value) as avg_value,
@@ -140,17 +138,16 @@ SELECT
     MAX(value) as max_value,
     COUNT(*) as measurement_count
 FROM air_quality_measurements
-GROUP BY day, station_id, parameter;
+GROUP BY DATE_TRUNC('day', timestamp), station_id, parameter;
 
-SELECT add_continuous_aggregate_policy('air_quality_daily',
-    start_offset => INTERVAL '7 days',
-    end_offset => INTERVAL '1 day',
-    schedule_interval => INTERVAL '1 day',
-    if_not_exists => TRUE);
-
--- Create data retention policy (keep data for 2 years)
-SELECT add_retention_policy('air_quality_measurements', INTERVAL '2 years', if_not_exists => TRUE);
+CREATE INDEX IF NOT EXISTS idx_daily_day ON air_quality_daily(day DESC);
+CREATE INDEX IF NOT EXISTS idx_daily_station ON air_quality_daily(station_id, day DESC);
 
 -- Grant permissions
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO air4thai_user;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO air4thai_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO postgres;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO postgres;
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO postgres;
+
+-- Note: To refresh materialized views, run:
+-- REFRESH MATERIALIZED VIEW CONCURRENTLY air_quality_hourly;
+-- REFRESH MATERIALIZED VIEW CONCURRENTLY air_quality_daily;

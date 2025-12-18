@@ -3,16 +3,16 @@ services:
   # SHARED SERVICES (Both Dev & Prod)
   # ============================================
 
-  # PostgreSQL Database with TimescaleDB (Time-series optimization)
+  # PostgreSQL Database with PostGIS (Spatial database extension)
   database:
-    image: timescale/timescaledb:latest-pg16
+    image: postgis/postgis:16-3.4
     container_name: air4thai-database
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       - POSTGRES_DB=air4thai
-      - POSTGRES_USER=air4thai_user
-      - POSTGRES_PASSWORD=air4thai_password
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1234
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -20,7 +20,7 @@ services:
     networks:
       - air4thai-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U air4thai_user -d air4thai"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d air4thai"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -43,7 +43,7 @@ services:
       - API_PORT=8000
       - DEBUG=True
       - CORS_ORIGINS=http://localhost:5173,http://localhost:3000
-      - DATABASE_URL=postgresql://air4thai_user:air4thai_password@database:5432/air4thai
+      - DATABASE_URL=postgresql://postgres:1234@database:5432/air4thai
     volumes:
       - ./backend:/app
       - backend-cache:/root/.cache
@@ -103,7 +103,7 @@ services:
       - API_PORT=5600
       - DEBUG=False
       - CORS_ORIGINS=http://localhost:80,https://geodev.fun
-      - DATABASE_URL=postgresql://air4thai_user:air4thai_password@database:5432/air4thai
+      - DATABASE_URL=postgresql://postgres:1234@database:5432/air4thai
     volumes:
       - model-storage:/app/models
     restart: always
