@@ -9,8 +9,8 @@ const FloatingMenu = ({ items, position = 'bottom-right' }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const positions = {
-        'bottom-right': 'fixed bottom-6 right-6 z-overlay',
-        'bottom-left': 'fixed bottom-6 left-6 z-overlay',
+        'bottom-right': 'fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-overlay',
+        'bottom-left': 'fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-overlay',
     };
 
     const toggleMenu = () => setIsOpen(!isOpen);
@@ -18,7 +18,7 @@ const FloatingMenu = ({ items, position = 'bottom-right' }) => {
     return (
         <div className={positions[position]}>
             {/* Menu Items - appear when menu is open */}
-            <div className="absolute bottom-16 right-0 flex flex-col-reverse gap-3 items-center">
+            <div className="absolute bottom-14 sm:bottom-16 right-0 flex flex-col-reverse gap-2 sm:gap-3 items-center">
                 {items.map((item, index) => (
                     <button
                         key={item.id}
@@ -27,11 +27,11 @@ const FloatingMenu = ({ items, position = 'bottom-right' }) => {
                             // Keep menu open for toggles
                         }}
                         className={`
-              w-12 h-12 rounded-full flex items-center justify-center
+              w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center
               shadow-lg transition-all duration-300 ease-out backdrop-blur-md
               ${item.isActive
                                 ? 'bg-orange-500/65 text-white border border-orange-400/30'
-                                : 'bg-orange-50/65 text-gray-700 hover:bg-orange-100/80 border border-orange-200/30'
+                                : 'bg-orange-50/65 text-gray-700 hover:bg-orange-100/80 active:bg-orange-200/80 border border-orange-200/30'
                             }
               ${isOpen
                                 ? 'opacity-100 translate-y-0 scale-100'
@@ -53,12 +53,12 @@ const FloatingMenu = ({ items, position = 'bottom-right' }) => {
             <button
                 onClick={toggleMenu}
                 className={`
-          w-14 h-14 rounded-full flex items-center justify-center
+          w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center
           shadow-xl transition-all duration-300 ease-out backdrop-blur-md
           border
           ${isOpen
                         ? 'bg-orange-600/65 text-white rotate-45 border-orange-500/30'
-                        : 'bg-orange-500/65 text-white hover:bg-orange-600/65 border-orange-400/30'
+                        : 'bg-orange-500/65 text-white hover:bg-orange-600/65 active:bg-orange-700/65 border-orange-400/30'
                     }
         `}
                 aria-label={isOpen ? 'Close menu' : 'Open menu'}
@@ -66,7 +66,7 @@ const FloatingMenu = ({ items, position = 'bottom-right' }) => {
             >
                 {/* Plus/Close icon */}
                 <svg
-                    className="w-6 h-6 transition-transform duration-300"
+                    className="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"

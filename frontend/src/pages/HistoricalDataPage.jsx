@@ -293,17 +293,17 @@ const HistoricalDataPage = () => {
     try {
       const result = useGapFilling
         ? await fetchAirQualityDataWithGapFilling({
-            stationID: selectedStation.id,
-            param: selectedParameter.id,
-            startDate,
-            endDate,
-          })
+          stationID: selectedStation.id,
+          param: selectedParameter.id,
+          startDate,
+          endDate,
+        })
         : await fetchAirQualityData({
-            stationID: selectedStation.id,
-            param: selectedParameter.id,
-            startDate,
-            endDate,
-          });
+          stationID: selectedStation.id,
+          param: selectedParameter.id,
+          startDate,
+          endDate,
+        });
 
       console.log('API Response:', result);
 
@@ -345,10 +345,9 @@ const HistoricalDataPage = () => {
       }
     } catch (err) {
       setError(
-        `Failed to fetch data. ${
-          useGapFilling
-            ? 'Please ensure the backend server is running at http://localhost:8000'
-            : 'Please try again.'
+        `Failed to fetch data. ${useGapFilling
+          ? 'Please ensure the backend server is running at http://localhost:8000'
+          : 'Please try again.'
         }`
       );
       console.error('API Error:', err);
@@ -376,11 +375,11 @@ const HistoricalDataPage = () => {
   };
 
   return (
-    <div className="relative w-screen h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="relative w-full h-full bg-gray-50">
       {/* Main Content */}
-      <div className="absolute top-16 left-0 right-0 bottom-0 flex flex-col md:flex-row">
+      <div className="absolute inset-0 flex flex-col md:flex-row">
         {/* Left Panel - Map */}
-        <div className={`${showMap ? 'flex' : 'hidden md:flex'} flex-col w-full md:w-2/5 border-r border-gray-200 bg-white`}>
+        <div className={`${showMap ? 'flex' : 'hidden md:flex'} flex-col w-full md:w-3/5 flex-1 relative bg-gray-100`}>
           {/* Map Container */}
           <div ref={mapContainer} className="flex-1 relative" />
 
@@ -418,9 +417,9 @@ const HistoricalDataPage = () => {
         </div>
 
         {/* Right Panel - Chart and Controls */}
-        <div className={`${!showMap ? 'flex' : 'hidden md:flex'} flex-col w-full md:w-3/5 bg-white`}>
+        <div className={`${!showMap ? 'flex' : 'hidden md:flex'} flex-col w-full md:w-[420px] bg-white border-l border-gray-200`}>
           {/* Controls Panel */}
-          <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+          <div className="p-4 border-b border-gray-100 bg-white">
             {/* Station Selection Dropdown */}
             <div className="mb-4">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -599,11 +598,10 @@ const HistoricalDataPage = () => {
                   <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-3 shadow-sm border-2 border-purple-300">
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-xs text-purple-700 font-semibold">AI Prediction Accuracy</p>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                        predictionMetrics.confidence === 'high' ? 'bg-green-200 text-green-800' :
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${predictionMetrics.confidence === 'high' ? 'bg-green-200 text-green-800' :
                         predictionMetrics.confidence === 'medium' ? 'bg-yellow-200 text-yellow-800' :
-                        'bg-orange-200 text-orange-800'
-                      }`}>
+                          'bg-orange-200 text-orange-800'
+                        }`}>
                         {predictionMetrics.confidence.toUpperCase()}
                       </span>
                     </div>

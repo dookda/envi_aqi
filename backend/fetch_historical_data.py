@@ -22,7 +22,7 @@ from database import AsyncSessionLocal, AirQualityMeasurement, MonitoringStation
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,  # Changed to DEBUG to see API responses
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -86,6 +86,9 @@ async def fetch_station_data(
             if response.status == 200:
                 data = await response.json()
 
+                # Debug logging
+                logger.debug(f"API Response for {station_id}/{parameter}: {data}")
+
                 # Parse the response
                 if isinstance(data, dict) and data.get('result') == 'OK':
                     stations = data.get('stations', [])
@@ -94,12 +97,14 @@ async def fetch_station_data(
                         station_data = stations[0].get('data', [])
 
                         for record in station_data:
-                            # Parse datetime
-                            datetime_str = record.get('datetime')
+                            # Parse datetime - API returns DATETIMEDATA field
+                            datetime_str = record.get('DATETIMEDATA') or record.get('datetime')
                             if datetime_str:
                                 try:
                                     timestamp = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M:%S')
-                                    value = record.get('value')
+
+                                    # Get value - API returns parameter name as key (e.g., "PM25": 26.6)
+                                    value = record.get(parameter) or record.get('value')
 
                                     # Only add if value is not None and not empty string
                                     if value is not None and value != '':

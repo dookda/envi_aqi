@@ -19,6 +19,7 @@ const Chart = ({ data, parameter }) => {
     const hasGapFilling = data.some(item => item.hasOwnProperty('gap_filled') || item.hasOwnProperty('was_gap'));
 
     let series;
+    let hasAnomalies = false;
 
     if (hasGapFilling) {
       // Get original values and predicted values for all points
@@ -39,6 +40,28 @@ const Chart = ({ data, parameter }) => {
         const isGap = item.gap_filled || item.was_gap;
         return isGap ? predictedValues[index] : null;
       });
+
+      // Calculate statistics for anomaly detection (if not provided by API)
+      const validValues = originalValues.filter(v => v !== null);
+      const mean = validValues.length > 0 ? validValues.reduce((a, b) => a + b, 0) / validValues.length : 0;
+      const stdDev = validValues.length > 0 ? Math.sqrt(validValues.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / validValues.length) : 0;
+      const threshold = mean + 2 * stdDev; // Points above 2 standard deviations are anomalies
+
+      // Create array for anomaly points
+      const anomalyPoints = data.map((item, index) => {
+        // Check if marked as anomaly by API
+        const isApiAnomaly = item.is_anomaly || item.anomaly || item.statistical_anomaly || item.domain_anomaly;
+        // Or detect locally based on threshold
+        const value = originalValues[index];
+        const isStatisticalAnomaly = value !== null && value > threshold;
+
+        if (isApiAnomaly || isStatisticalAnomaly) {
+          return value;
+        }
+        return null;
+      });
+
+      hasAnomalies = anomalyPoints.some(v => v !== null);
 
       series = [
         {
@@ -89,6 +112,23 @@ const Chart = ({ data, parameter }) => {
           z: 4
         }
       ];
+
+      // Add anomaly series if anomalies exist
+      if (hasAnomalies) {
+        series.push({
+          name: 'Anomaly Points',
+          type: 'scatter',
+          data: anomalyPoints,
+          itemStyle: {
+            color: '#ef4444',
+            borderColor: '#fff',
+            borderWidth: 2
+          },
+          symbol: 'triangle',
+          symbolSize: 12,
+          z: 5
+        });
+      }
     } else {
       // Regular data without gap filling
       const values = data.map(item => parseFloat(item[paramKey]) || 0);
@@ -148,11 +188,16 @@ const Chart = ({ data, parameter }) => {
             }
           });
 
-          // Add gap status if available
+          // Add gap and anomaly status if available
           if (hasGapFilling && params[0] && params[0].dataIndex !== undefined) {
             const dataPoint = data[params[0].dataIndex];
             if (dataPoint && (dataPoint.gap_filled || dataPoint.was_gap)) {
-              tooltip += `<span style="color: #f59e0b;">⚠ Gap-filled by AI</span>`;
+              tooltip += `<span style="color: #f59e0b;">⚠ Gap-filled by AI</span><br/>`;
+            }
+            // Check for anomaly
+            const isAnomaly = dataPoint?.is_anomaly || dataPoint?.anomaly || dataPoint?.statistical_anomaly || dataPoint?.domain_anomaly;
+            if (isAnomaly) {
+              tooltip += `<span style="color: #ef4444;">🔺 Anomaly Detected</span>`;
             }
           }
 
@@ -163,10 +208,12 @@ const Chart = ({ data, parameter }) => {
         data: [
           `${parameter?.name || 'Value'} (Actual)`,
           `${parameter?.name || 'Value'} (AI Prediction)`,
-          'Gap-Filled Points'
+          'Gap-Filled Points',
+          ...(hasAnomalies ? ['Anomaly Points'] : [])
         ],
         top: '8%',
-        right: '5%'
+        right: '5%',
+        textStyle: { fontSize: 11 }
       } : undefined,
       toolbox: {
         feature: {

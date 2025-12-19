@@ -21,10 +21,13 @@ except ImportError as e:
 
 app = FastAPI(title="Air4Thai API Backend", version="1.0.0")
 
-# CORS middleware
+# CORS middleware - read origins from environment variable
+cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000,http://localhost:5500")
+cors_origins = [origin.strip() for origin in cors_origins_str.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Vite default port
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
