@@ -1,0 +1,3 @@
+-- Empty import file - data will be imported via API
+-- Run the data import script after services are started:
+-- docker exec -it aqi_backend python import_data.py
